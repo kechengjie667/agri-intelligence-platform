@@ -1,0 +1,9 @@
+# 备份文件不提交
+backups/
+
+# Python
+__pycache__/
+*.pyc
+
+# Streamlit
+.streamlit/secrets.toml
