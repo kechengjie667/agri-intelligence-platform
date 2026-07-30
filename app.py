@@ -165,6 +165,30 @@ with st.sidebar:
 
     st.divider()
 
+    # ---- 上传本地 Excel 到云端 ----
+    st.subheader("📤 上传本地数据")
+    uploaded_file = st.file_uploader(
+        "选择本地 Excel 覆盖云端数据",
+        type=["xlsx", "xls"],
+        key="upload_excel",
+    )
+    if uploaded_file is not None:
+        try:
+            # 读取上传的文件
+            upload_df = pd.read_excel(uploaded_file, sheet_name=0, engine="openpyxl")
+            # 获取上传文件的第一个 sheet 名
+            upload_xls = pd.ExcelFile(uploaded_file, engine="openpyxl")
+            upload_sheet = upload_xls.sheet_names[0]
+            # 保存到当前选中的 sheet
+            if save_data(upload_df, selected_sheet):
+                add_log("上传", f"从本地更新了 {len(upload_df)} 行数据")
+                st.success(f"已上传 {len(upload_df)} 行数据到 `{selected_sheet}`")
+                st.rerun()
+        except Exception as e:
+            st.error(f"上传失败: {e}")
+
+    st.divider()
+
     st.subheader("📋 操作日志")
     if not st.session_state.log:
         st.caption("暂无操作记录")
