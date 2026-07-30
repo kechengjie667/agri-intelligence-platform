@@ -222,17 +222,20 @@ tab1, tab2 = st.tabs(["📋 数据编辑", "📊 数据可视化"])
 
 # -------- Tab1: 数据编辑 --------
 with tab1:
-    if df.empty:
+    if df.empty and "pending_data" not in st.session_state:
         st.info("该数据表为空，点击「新增行」开始添加数据。")
         edited_df = df
     else:
-        # 核心：加一个「删除勾选」复选框列，勾选后点按钮真正删除
-        if "___select___" not in df.columns:
-            df = df.copy()
-            df.insert(0, "___select___", False)
+        # 核心：用 pending_data 或 df 作为数据源
+        # pending_data 优先 —— 保证删除/新增后状态不丢
+        source_df = st.session_state.get("pending_data", df.copy())
+
+        # 确保有选择列
+        if "___select___" not in source_df.columns:
+            source_df.insert(0, "___select___", False)
 
         edited_df = st.data_editor(
-            df,
+            source_df,
             use_container_width=True,
             hide_index=True,
             column_config={
@@ -267,6 +270,14 @@ with tab1:
 
     with btn3:
         save_clicked = st.button("💾 保存修改", use_container_width=True, type="primary")
+
+    # 撤销按钮：放弃未保存的修改
+    if "pending_data" in st.session_state:
+        with btn4:
+            if st.button("↩️ 撤销修改", use_container_width=True, help="放弃所有未保存的改动，恢复原始数据"):
+                del st.session_state["pending_data"]
+                add_log("撤销", "已恢复原始数据")
+                st.rerun()
 
     # --- 删除勾选行 ---
     if delete_clicked:
